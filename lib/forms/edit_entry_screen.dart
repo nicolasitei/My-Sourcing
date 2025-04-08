@@ -35,7 +35,6 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
   @override
   void initState() {
     super.initState();
-    print("Initial data: ${widget.initialData}");
 
     for (final field in widget.fields) {
       if (field.type != 'image') {
