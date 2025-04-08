@@ -1,7 +1,11 @@
+import 'dart:developer';
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:mysourcing2/services/storage_service.dart';
+import 'package:mysourcing2/widgets/image_uploader.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'form_model.dart';
 import 'entry_list_screen.dart';
@@ -12,12 +16,7 @@ class FillFormScreen extends StatefulWidget {
   final String formTitle;
   final List<FormFieldData> fields;
 
-  const FillFormScreen({
-    super.key,
-    required this.formId,
-    required this.formTitle,
-    required this.fields,
-  });
+  const FillFormScreen({super.key, required this.formId, required this.formTitle, required this.fields});
 
   @override
   State<FillFormScreen> createState() => _FillFormScreenState();
@@ -25,11 +24,11 @@ class FillFormScreen extends StatefulWidget {
 
 class _FillFormScreenState extends State<FillFormScreen> {
   final Map<String, TextEditingController> _controllers = {};
-  final Map<String, File?> _updatedImages = {};
   final picker = ImagePicker();
 
+  final List<File> _tempFiles = [];
+
   bool _isSubmitting = false;
-  bool _isImageUploadCancelled = false;
 
   @override
   void initState() {
@@ -41,21 +40,57 @@ class _FillFormScreenState extends State<FillFormScreen> {
     }
   }
 
-  Future<void> _pickImage() async {
+  Future<void> _addImage() async {
     final status = await Permission.camera.request();
 
-    if (status.isGranted) {
-      final pickedFile = await picker.pickImage(source: ImageSource.camera);
-      if (pickedFile != null) {
-        setState(() {
-          _updatedImages['imageLabel'] = File(pickedFile.path);
-        });
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Permission refusée pour accéder à la caméra')),
+    log("Status de la permission : $status");
+
+    if (status != PermissionStatus.granted) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Permission refusée pour accéder à la caméra')));
+      return;
+    }
+
+    // Montrer une modalbottomsheet pour choisir entre la caméra et la galerie
+    ImageSource? imageSource;
+
+    if (mounted) {
+      imageSource = await showModalBottomSheet<ImageSource?>(
+        context: context,
+        builder: (context) {
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: SafeArea(
+              child: Wrap(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.camera_alt),
+                    title: const Text('Prendre une photo'),
+                    onTap: () => Navigator.pop(context, ImageSource.camera),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.photo),
+                    title: const Text('Choisir dans la galerie'),
+                    onTap: () => Navigator.pop(context, ImageSource.gallery),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       );
     }
+
+    if (imageSource == null) return;
+
+    final pickedFile = await picker.pickImage(source: imageSource);
+
+    if (pickedFile == null) return;
+
+    // Add image to app folder
+
+    setState(() {
+      _tempFiles.add(File(pickedFile.path));
+    });
   }
 
   Future<void> _submit() async {
@@ -68,15 +103,14 @@ class _FillFormScreenState extends State<FillFormScreen> {
     try {
       for (final field in widget.fields) {
         if (field.type == 'image') {
-          final file = _updatedImages[field.label];
-          if (file != null && !_isImageUploadCancelled) {
-            final ref = FirebaseStorage.instance
-                .ref('form_images/${DateTime.now().millisecondsSinceEpoch}.jpg');
-            await ref.putFile(file);
-            final url = await ref.getDownloadURL();
-            entry[field.label] = url;
+          log("Image field: ${field.label}");
+
+          if (_tempFiles.isNotEmpty) {
+            final imagePaths = await _uploadFilesToServer();
+            log("Image paths: $imagePaths");
+            entry[field.label] = imagePaths;
           } else {
-            entry[field.label] = '';
+            entry[field.label] = [];
           }
         } else {
           entry[field.label] = _controllers[field.label]?.text ?? '';
@@ -87,32 +121,42 @@ class _FillFormScreenState extends State<FillFormScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Entrée ajoutée avec succès')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Entrée ajoutée avec succès')));
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (_) => EntryListScreen(
-            formId: widget.formId,
-            formTitle: widget.formTitle,
-            fields: widget.fields,
-          ),
-        ),
+        MaterialPageRoute(builder: (_) => EntryListScreen(formId: widget.formId, formTitle: widget.formTitle, fields: widget.fields)),
       );
     } catch (e) {
-      print("❌ Erreur globale : $e");
+      log("❌ Erreur globale : $e");
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Erreur lors de la soumission : $e")),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Erreur lors de la soumission : $e")));
     } finally {
       if (mounted) {
         setState(() {
           _isSubmitting = false;
-          _isImageUploadCancelled = false; // Reset the cancellation flag
         });
       }
+    }
+
+    setState(() {
+      _isSubmitting = false;
+    });
+  }
+
+  _uploadFilesToServer() async {
+    try {
+      final newPaths = await GetIt.I<StorageService>().uploadImagesToServer(
+        uid: FirebaseAuth.instance.currentUser!.uid,
+        formId: widget.formId,
+        files: _tempFiles,
+      );
+      return newPaths;
+    } catch (e) {
+      log("Erreur lors de l'upload de l'image : $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Erreur lors de l'upload de l'image : $e")));
+      }
+      rethrow;
     }
   }
 
@@ -129,22 +173,18 @@ class _FillFormScreenState extends State<FillFormScreen> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("${field.label} (image)",
-                        style: Theme.of(context).textTheme.titleLarge),
+                    Text("${field.label} (image)", style: Theme.of(context).textTheme.titleLarge),
                     const SizedBox(height: 8),
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.camera_alt),
-                      label: const Text("Prendre une photo"),
-                      onPressed: _pickImage,
+                    ImageUploader(
+                      images: _tempFiles,
+                      addImage: _addImage,
+                      deleteImage: (index) {
+                        setState(() {
+                          _tempFiles.removeAt(index);
+                        });
+                      },
                     ),
                     const SizedBox(height: 8),
-                    if (_updatedImages[field.label] != null)
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.file(_updatedImages[field.label]!,
-                            height: 120),
-                      ),
-                    const SizedBox(height: 24),
                   ],
                 );
               } else {
@@ -153,9 +193,7 @@ class _FillFormScreenState extends State<FillFormScreen> {
                   child: TextField(
                     controller: _controllers[field.label],
                     maxLines: field.type == 'multiline' ? 5 : 1,
-                    decoration: InputDecoration(
-                      labelText: field.label,
-                    ),
+                    decoration: InputDecoration(labelText: field.label),
                   ),
                 );
               }
@@ -163,9 +201,7 @@ class _FillFormScreenState extends State<FillFormScreen> {
             const SizedBox(height: 12),
             ElevatedButton.icon(
               onPressed: _isSubmitting ? null : _submit,
-              icon: _isSubmitting
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Icon(Icons.save),
+              icon: _isSubmitting ? const CircularProgressIndicator(color: Colors.white) : const Icon(Icons.save),
               label: const Text("Sauvegarder"),
             ),
           ],

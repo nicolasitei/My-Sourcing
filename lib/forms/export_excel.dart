@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';  // Assurez-vous que le bon package est importé
+import 'package:share_plus/share_plus.dart'; // Assurez-vous que le bon package est importé
 import 'form_model.dart';
 
 Future<void> exportSelectedEntriesToExcel({
@@ -18,17 +18,17 @@ Future<void> exportSelectedEntriesToExcel({
 
     final excel = Excel.createExcel();
     excel.delete('Sheet1'); // Supprimer la feuille par défaut
-    final sheet = excel['Export'];
+    final sheet = excel['Export']; // TODO : Renommer la feuille Sheet 1
 
-    final headers = fields.map((f) => TextCellValue(f.label)).toList()
-      ..add(TextCellValue('Date'));
+    final headers = fields.map((f) => TextCellValue(f.label)).toList()..add(TextCellValue('Date'));
     sheet.appendRow(headers);
 
     for (var entry in entries) {
-      final row = fields.map<CellValue?>((f) {
-        final value = entry[f.label];
-        return TextCellValue(value?.toString() ?? '');
-      }).toList();
+      final row =
+          fields.map<CellValue?>((f) {
+            final value = entry[f.label];
+            return TextCellValue(value?.toString() ?? '');
+          }).toList();
 
       final submittedAt = entry['submittedAt']?.toDate().toString() ?? '';
       row.add(TextCellValue(submittedAt));
@@ -43,9 +43,10 @@ Future<void> exportSelectedEntriesToExcel({
     final fileBytes = excel.encode();
     if (fileBytes == null) throw Exception("Échec de l'encodage du fichier Excel.");
 
-    final file = File(filePath)
-      ..createSync(recursive: true)
-      ..writeAsBytesSync(fileBytes);
+    final file =
+        File(filePath)
+          ..createSync(recursive: true)
+          ..writeAsBytesSync(fileBytes);
 
     // Utilisez la méthode correcte pour partager le fichier
     Share.shareFiles([filePath], text: 'Voici le fichier Excel exporté : $filename');
@@ -66,9 +67,7 @@ Future<void> exportSelectedEntriesToExcel({
   } catch (e) {
     print("❌ Erreur export Excel : $e");
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Erreur lors de l'export : $e")),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Erreur lors de l'export : $e")));
     }
   }
 }
