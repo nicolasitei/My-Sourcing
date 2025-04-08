@@ -1,6 +1,9 @@
+import 'dart:developer';
 import 'dart:io';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
+import 'package:mysourcing2/services/storage_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart'; // Assurez-vous que le bon package est importé
 import 'form_model.dart';
@@ -14,31 +17,50 @@ Future<void> exportSelectedEntriesToExcel({
   required List<Map<String, dynamic>> entries,
 }) async {
   try {
-    print("📦 Démarrage export Excel...");
+    log("📦 Démarrage export Excel...");
 
     final excel = Excel.createExcel();
-    excel.delete('Sheet1'); // Supprimer la feuille par défaut
-    final sheet = excel['Export']; // TODO : Renommer la feuille Sheet 1
+    excel.rename('Sheet1', 'Export');
 
-    final headers = fields.map((f) => TextCellValue(f.label)).toList()..add(TextCellValue('Date'));
-    sheet.appendRow(headers);
+    // Create the header row
+    final headers = fields.map((f) => TextCellValue(f.label)).toList();
+    headers.add(TextCellValue('Date')); // Ajoutez la colonne de date
+
+    excel.appendRow('Export', headers);
 
     for (var entry in entries) {
-      final row =
-          fields.map<CellValue?>((f) {
-            final value = entry[f.label];
-            return TextCellValue(value?.toString() ?? '');
-          }).toList();
+      log('Exporting entry: $entry');
 
-      final submittedAt = entry['submittedAt']?.toDate().toString() ?? '';
+      List<CellValue> row = [];
+
+      for (var field in fields) {
+        if (field.type == 'image') {
+          final imagePaths = List<String>.from(entry[field.label] ?? []);
+          log('Image Paths: $imagePaths');
+
+          // Convert storage paths to downloadable urls
+          final imageUrls = imagePaths.map((path) => GetIt.I<StorageService>().getImageUrlFromStoragePath(path)).toList();
+          log('Image URLs: $imageUrls');
+
+          final urls = await Future.wait(imageUrls);
+
+          row.add(TextCellValue(urls.toString()));
+        } else {
+          final value = entry[field.label];
+          row.add(TextCellValue(value?.toString() ?? ''));
+          log('Updated entry: $entry');
+        }
+      }
+
+      final submittedAt = entry['createdAt']?.toDate().toString() ?? '';
       row.add(TextCellValue(submittedAt));
-      sheet.appendRow(row);
+      excel.appendRow('Export', row);
     }
 
     final dir = await getApplicationDocumentsDirectory();
     final filename = '${formTitle.replaceAll(" ", "_")}_${DateTime.now().millisecondsSinceEpoch}.xlsx';
     final filePath = '${dir.path}/$filename';
-    print("📂 Enregistrement dans : $filePath");
+    log("📂 Enregistrement dans : $filePath");
 
     final fileBytes = excel.encode();
     if (fileBytes == null) throw Exception("Échec de l'encodage du fichier Excel.");
@@ -63,9 +85,9 @@ Future<void> exportSelectedEntriesToExcel({
       );
     }
 
-    print("✅ Export terminé avec succès.");
+    log("✅ Export terminé avec succès.");
   } catch (e) {
-    print("❌ Erreur export Excel : $e");
+    log("❌ Erreur export Excel : $e");
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Erreur lors de l'export : $e")));
     }

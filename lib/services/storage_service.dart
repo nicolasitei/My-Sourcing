@@ -125,4 +125,10 @@ class StorageService {
 
     return file;
   }
+
+  Future<String> getImageUrlFromStoragePath(String storagePath) async {
+    final ref = _storage.ref().child(storagePath);
+    final url = await ref.getDownloadURL();
+    return url;
+  }
 }
