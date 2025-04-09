@@ -46,7 +46,7 @@ class _AutocompleteTextFieldState extends State<AutocompleteTextField> {
       return 58.0;
     }
 
-    return min(options.length * 58.0, 230);
+    return min(options.length * 58.0, 230.0).toDouble();
   }
 
   @override
