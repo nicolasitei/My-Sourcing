@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
 import 'package:get_it/get_it.dart';
+import 'package:mysourcing2/services/database_service.dart';
 import 'package:mysourcing2/services/storage_service.dart';
 import 'auth/auth_screen.dart';
 import 'home/home_screen.dart';
@@ -16,6 +18,10 @@ void main() async {
 
   // Enregistrement des services dans GetIt
   GetIt.I.registerLazySingleton<StorageService>(() => StorageService());
+  GetIt.I.registerLazySingleton<DatabaseService>(() => DatabaseService());
+
+  // Close keyboard
+  SystemChannels.textInput.invokeMethod('TextInput.hide');
 
   runApp(MyApp()); // Exécuter l'application après initialisation de Firebase
 }

@@ -4,7 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mysourcing2/models/fournisseur_model.dart';
 import 'package:mysourcing2/services/storage_service.dart';
+import 'package:mysourcing2/widgets/auto_suggest.dart';
 import 'package:mysourcing2/widgets/image_uploader.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'form_model.dart';
@@ -27,6 +29,8 @@ class _FillFormScreenState extends State<FillFormScreen> {
   final picker = ImagePicker();
 
   final List<File> _tempFiles = [];
+
+  FournisseurModel? _selectedFournisseur;
 
   bool _isSubmitting = false;
 
@@ -115,6 +119,10 @@ class _FillFormScreenState extends State<FillFormScreen> {
         } else {
           entry[field.label] = _controllers[field.label]?.text ?? '';
         }
+
+        if (field.type == 'fournisseur') {
+          entry[field.label] = _selectedFournisseur?.toJson();
+        }
       }
 
       await FormService().saveEntry(widget.formId, entry);
@@ -186,6 +194,15 @@ class _FillFormScreenState extends State<FillFormScreen> {
                     ),
                     const SizedBox(height: 8),
                   ],
+                );
+              } else if (field.type == 'fournisseur') {
+                return AutocompleteTextField(
+                  initialValue: _selectedFournisseur,
+                  label: field.label,
+                  onChanged: (fournisseur) {
+                    log('Selected fournisseur: $fournisseur');
+                    _selectedFournisseur = fournisseur;
+                  },
                 );
               } else {
                 return Padding(

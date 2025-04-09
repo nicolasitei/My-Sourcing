@@ -65,10 +65,9 @@ Future<void> exportSelectedEntriesToExcel({
     final fileBytes = excel.encode();
     if (fileBytes == null) throw Exception("Échec de l'encodage du fichier Excel.");
 
-    final file =
-        File(filePath)
-          ..createSync(recursive: true)
-          ..writeAsBytesSync(fileBytes);
+    File(filePath)
+      ..createSync(recursive: true)
+      ..writeAsBytesSync(fileBytes);
 
     // Utilisez la méthode correcte pour partager le fichier
     Share.shareFiles([filePath], text: 'Voici le fichier Excel exporté : $filename');

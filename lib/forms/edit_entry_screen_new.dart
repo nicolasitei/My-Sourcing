@@ -6,8 +6,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'form_model.dart';
-import '../widgets/loading_overlay.dart';
-import 'form_service.dart';
 
 class EditEntryScreen extends StatefulWidget {
   final String formId;
@@ -15,13 +13,7 @@ class EditEntryScreen extends StatefulWidget {
   final List<FormFieldData> fields;
   final Map<String, dynamic> initialData;
 
-  const EditEntryScreen({
-    super.key,
-    required this.formId,
-    required this.entryId,
-    required this.fields,
-    required this.initialData,
-  });
+  const EditEntryScreen({super.key, required this.formId, required this.entryId, required this.fields, required this.initialData});
 
   @override
   State<EditEntryScreen> createState() => _EditEntryScreenState();
@@ -37,9 +29,7 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
     super.initState();
     for (final field in widget.fields) {
       if (field.type != 'image') {
-        _controllers[field.label] = TextEditingController(
-          text: widget.initialData[field.label]?.toString() ?? '',
-        );
+        _controllers[field.label] = TextEditingController(text: widget.initialData[field.label]?.toString() ?? '');
       }
     }
   }
@@ -64,20 +54,14 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
           });
           print("Image sélectionnée depuis la galerie : ${pickedFile.path}");
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Aucune image sélectionnée.")),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Aucune image sélectionnée.")));
         }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Erreur de sélection de l'image : $e")),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Erreur de sélection de l'image : $e")));
         print("Erreur de sélection de l'image : $e");
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Permission refusée pour accéder à la galerie')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Permission refusée pour accéder à la galerie')));
       print("Permission refusée pour accéder à la galerie");
     }
   }
@@ -96,10 +80,10 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
           updatedData[field.label] = url;
           print("Image téléchargée et URL ajoutée à Firestore : $url");
         } else {
-          updatedData[field.label] = widget.initialData[field.label];  // Si aucune image n'est sélectionnée, conserver l'ancienne URL
+          updatedData[field.label] = widget.initialData[field.label]; // Si aucune image n'est sélectionnée, conserver l'ancienne URL
         }
       } else {
-        updatedData[field.label] = _controllers[field.label]?.text ?? '';  // Enregistrer les autres champs
+        updatedData[field.label] = _controllers[field.label]?.text ?? ''; // Enregistrer les autres champs
       }
     }
 
@@ -114,9 +98,7 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
         .update(updatedData);
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Entrée mise à jour.")),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Entrée mise à jour.")));
       Navigator.pop(context);
     }
   }
@@ -134,14 +116,9 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("${field.label} (image)",
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text("${field.label} (image)", style: const TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.image),
-                    label: const Text("Choisir depuis la galerie"),
-                    onPressed: _pickImage,
-                  ),
+                  ElevatedButton.icon(icon: const Icon(Icons.image), label: const Text("Choisir depuis la galerie"), onPressed: _pickImage),
                   const SizedBox(height: 8),
                   // Affichage de l'image sélectionnée ou de l'image existante
                   if (_updatedImages[field.label] != null)
@@ -159,28 +136,17 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
                   maxLines: 5,
                   minLines: 3,
                   keyboardType: TextInputType.multiline,
-                  decoration: InputDecoration(
-                    labelText: field.label,
-                    alignLabelWithHint: true,
-                    border: const OutlineInputBorder(),
-                  ),
+                  decoration: InputDecoration(labelText: field.label, alignLabelWithHint: true, border: const OutlineInputBorder()),
                 ),
               );
             } else {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 16),
-                child: TextField(
-                  controller: _controllers[field.label],
-                  decoration: InputDecoration(labelText: field.label),
-                ),
+                child: TextField(controller: _controllers[field.label], decoration: InputDecoration(labelText: field.label)),
               );
             }
           }),
-          ElevatedButton.icon(
-            onPressed: _submit,
-            icon: const Icon(Icons.save),
-            label: const Text("Sauvegarder les modifications"),
-          )
+          ElevatedButton.icon(onPressed: _submit, icon: const Icon(Icons.save), label: const Text("Sauvegarder les modifications")),
         ],
       ),
     );

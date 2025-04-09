@@ -117,10 +117,7 @@ class _EntryListScreenState extends State<EntryListScreen> {
                       elevation: 2,
                       child: ListTile(
                         contentPadding: const EdgeInsets.all(8),
-                        title:
-                            firstFilled is List
-                                ? Text('Images (${firstFilled.length})', style: const TextStyle(fontWeight: FontWeight.w600))
-                                : Text(firstFilled?.toString() ?? "Entrée ${index + 1}", style: const TextStyle(fontWeight: FontWeight.w600)),
+                        title: _buildTitle(firstFilled),
                         leading:
                             thumbnailImagePath != null && thumbnailImagePath.isNotEmpty
                                 ? ThumbnailImageRenderer(storagePath: thumbnailImagePath[0])
@@ -190,5 +187,24 @@ class _EntryListScreenState extends State<EntryListScreen> {
         },
       ),
     );
+  }
+
+  Widget _buildTitle(dynamic firstFilled) {
+    if (firstFilled == null) {
+      return const Text("Aucune donnée", style: TextStyle(fontWeight: FontWeight.w600));
+    }
+
+    if (firstFilled is String) {
+      return Text(firstFilled, style: const TextStyle(fontWeight: FontWeight.w600));
+    }
+
+    if (firstFilled is List) {
+      return Text('Images (${firstFilled.length})', style: const TextStyle(fontWeight: FontWeight.w600));
+    }
+
+    if (firstFilled is Map) {
+      return Text(firstFilled.entries.first.value, style: const TextStyle(fontWeight: FontWeight.w600));
+    }
+    return const Text("Données non valides", style: TextStyle(fontWeight: FontWeight.w600));
   }
 }

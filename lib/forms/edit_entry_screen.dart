@@ -5,7 +5,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mysourcing2/models/fournisseur_model.dart';
 import 'package:mysourcing2/services/storage_service.dart';
+import 'package:mysourcing2/widgets/auto_suggest.dart';
 import 'package:mysourcing2/widgets/image_uploader.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'form_model.dart';
@@ -32,16 +34,21 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
   final List<File> _tempFiles = [];
   List<File> get _allImages => [..._images, ..._tempFiles];
 
+  FournisseurModel? _selectedFournisseur;
+
   @override
   void initState() {
     super.initState();
 
     for (final field in widget.fields) {
-      if (field.type != 'image') {
-        _controllers[field.label] = TextEditingController(text: widget.initialData[field.label]?.toString() ?? '');
-      } else {
-        // Pour les champs d'image, on vient copier les liens d'images existants
+      if (field.type == 'image') {
         loadImages(field);
+      } else if (field.type == 'fournisseur') {
+        print("Fournisseur: ${widget.initialData[field.label]}");
+        _selectedFournisseur = FournisseurModel.fromJson(widget.initialData[field.label]);
+        // _controllers[field.label] = TextEditingController(text: fournisseur.name ?? '');
+      } else {
+        _controllers[field.label] = TextEditingController(text: widget.initialData[field.label]?.toString() ?? '');
       }
     }
   }
@@ -139,6 +146,8 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
         }
 
         updatedData[field.label] = storagePaths;
+      } else if (field.type == 'fournisseur') {
+        updatedData[field.label] = _selectedFournisseur?.toJson();
       } else {
         updatedData[field.label] = _controllers[field.label]?.text ?? '';
       }
@@ -219,6 +228,18 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
                   minLines: 3,
                   keyboardType: TextInputType.multiline,
                   decoration: InputDecoration(labelText: field.label, alignLabelWithHint: true, border: const OutlineInputBorder()),
+                ),
+              );
+            } else if (field.type == 'fournisseur') {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: AutocompleteTextField(
+                  initialValue: _selectedFournisseur,
+                  label: 'fournisseur',
+                  onChanged: (val) {
+                    log("Selected fournisseur: $val");
+                    _selectedFournisseur = val;
+                  },
                 ),
               );
             } else {

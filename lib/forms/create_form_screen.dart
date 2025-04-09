@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'form_model.dart';
 
@@ -15,7 +14,7 @@ class _CreateFormScreenState extends State<CreateFormScreen> {
   final _titleController = TextEditingController();
   final List<FormFieldData> _fields = [];
 
-  final List<String> _fieldTypes = ['text', 'number', 'multiline', 'image'];
+  final List<String> _fieldTypes = ['text', 'number', 'multiline', 'image', 'fournisseur'];
   String _selectedType = 'text';
   final _labelController = TextEditingController();
 
@@ -39,9 +38,7 @@ class _CreateFormScreenState extends State<CreateFormScreen> {
   void _submitForm() {
     final title = _titleController.text.trim();
     if (title.isEmpty || _fields.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Veuillez compléter le formulaire")),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Veuillez compléter le formulaire")));
       return;
     }
 
@@ -71,34 +68,20 @@ class _CreateFormScreenState extends State<CreateFormScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: ListView(
           children: [
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: "Titre du formulaire",
-              ),
-            ),
+            TextField(controller: _titleController, decoration: const InputDecoration(labelText: "Titre du formulaire")),
             const SizedBox(height: 24),
             Text("Ajouter un champ", style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             Row(
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: _labelController,
-                    decoration: const InputDecoration(
-                      labelText: "Nom du champ",
-                    ),
-                  ),
-                ),
+                Expanded(child: TextField(controller: _labelController, decoration: const InputDecoration(labelText: "Nom du champ"))),
                 const SizedBox(width: 12),
                 DropdownButton<String>(
                   value: _selectedType,
-                  items: _fieldTypes.map((type) {
-                    return DropdownMenuItem(
-                      value: type,
-                      child: Text(type == 'multiline' ? 'multiline' : type),
-                    );
-                  }).toList(),
+                  items:
+                      _fieldTypes.map((type) {
+                        return DropdownMenuItem(value: type, child: Text(type == 'multiline' ? 'multiline' : type));
+                      }).toList(),
                   onChanged: (value) {
                     if (value != null) {
                       setState(() => _selectedType = value);
@@ -106,10 +89,7 @@ class _CreateFormScreenState extends State<CreateFormScreen> {
                   },
                 ),
                 const SizedBox(width: 8),
-                IconButton(
-                  onPressed: _addField,
-                  icon: const Icon(Icons.add_circle, color: Colors.green),
-                )
+                IconButton(onPressed: _addField, icon: const Icon(Icons.add_circle, color: Colors.green)),
               ],
             ),
             const SizedBox(height: 24),
@@ -125,20 +105,13 @@ class _CreateFormScreenState extends State<CreateFormScreen> {
                   child: ListTile(
                     title: Text(field.label),
                     subtitle: Text("Type : ${field.type}"),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _removeField(index),
-                    ),
+                    trailing: IconButton(icon: const Icon(Icons.delete, color: Colors.red), onPressed: () => _removeField(index)),
                   ),
                 );
               }),
             ],
             const SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: _submitForm,
-              icon: const Icon(Icons.check),
-              label: const Text("Créer le formulaire"),
-            )
+            ElevatedButton.icon(onPressed: _submitForm, icon: const Icon(Icons.check), label: const Text("Créer le formulaire")),
           ],
         ),
       ),
