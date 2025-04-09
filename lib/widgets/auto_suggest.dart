@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
@@ -40,6 +41,14 @@ class _AutocompleteTextFieldState extends State<AutocompleteTextField> {
     super.dispose();
   }
 
+  _buildListHeight(Iterable<String> options) {
+    if (options.contains('Add a supplier')) {
+      return 58.0;
+    }
+
+    return min(options.length * 58.0, 230);
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -65,7 +74,7 @@ class _AutocompleteTextFieldState extends State<AutocompleteTextField> {
               child: Material(
                 elevation: 4.0,
                 child: SizedBox(
-                  height: 230,
+                  height: _buildListHeight(options),
                   width: constraints.maxWidth,
                   child: ListView.builder(
                     padding: EdgeInsets.zero,
@@ -173,8 +182,6 @@ class _AutocompleteTextFieldState extends State<AutocompleteTextField> {
     );
 
     if (supplier != null) {
-      // Handle the added supplier
-      log('Added supplier: ${supplierModel.toJson()}');
       _saveSupplier(supplier);
     }
   }
