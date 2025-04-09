@@ -5,7 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:mysourcing2/models/fournisseur_model.dart';
+import 'package:mysourcing2/models/supplier_model.dart';
 import 'package:mysourcing2/services/storage_service.dart';
 import 'package:mysourcing2/widgets/auto_suggest.dart';
 import 'package:mysourcing2/widgets/image_uploader.dart';
@@ -34,7 +34,7 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
   final List<File> _tempFiles = [];
   List<File> get _allImages => [..._images, ..._tempFiles];
 
-  FournisseurModel? _selectedFournisseur;
+  SupplierModel? _selectedSupplier;
 
   @override
   void initState() {
@@ -43,10 +43,8 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
     for (final field in widget.fields) {
       if (field.type == 'image') {
         loadImages(field);
-      } else if (field.type == 'fournisseur') {
-        print("Fournisseur: ${widget.initialData[field.label]}");
-        _selectedFournisseur = FournisseurModel.fromJson(widget.initialData[field.label]);
-        // _controllers[field.label] = TextEditingController(text: fournisseur.name ?? '');
+      } else if (field.type == 'supplier') {
+        _selectedSupplier = SupplierModel.fromJson(widget.initialData[field.label]);
       } else {
         _controllers[field.label] = TextEditingController(text: widget.initialData[field.label]?.toString() ?? '');
       }
@@ -55,7 +53,6 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
 
   loadImages(FormFieldData field) async {
     final storagePaths = List<String>.from(widget.initialData[field.label] ?? []);
-    log("Storage paths: $storagePaths");
     if (storagePaths.isEmpty) return;
     for (final path in storagePaths) {
       // Get the local file
@@ -69,8 +66,6 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
 
   Future<void> _addNewImage() async {
     final status = await Permission.camera.request();
-
-    log("Status de la permission : $status");
 
     if (status != PermissionStatus.granted) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Permission refusée pour accéder à la caméra')));
@@ -91,12 +86,12 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
                 children: [
                   ListTile(
                     leading: const Icon(Icons.camera_alt),
-                    title: const Text('Prendre une photo'),
+                    title: const Text('Take a picture'),
                     onTap: () => Navigator.pop(context, ImageSource.camera),
                   ),
                   ListTile(
                     leading: const Icon(Icons.photo),
-                    title: const Text('Choisir dans la galerie'),
+                    title: const Text('Pick from gallery'),
                     onTap: () => Navigator.pop(context, ImageSource.gallery),
                   ),
                 ],
@@ -146,8 +141,8 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
         }
 
         updatedData[field.label] = storagePaths;
-      } else if (field.type == 'fournisseur') {
-        updatedData[field.label] = _selectedFournisseur?.toJson();
+      } else if (field.type == 'supplier') {
+        updatedData[field.label] = _selectedSupplier?.toJson();
       } else {
         updatedData[field.label] = _controllers[field.label]?.text ?? '';
       }
@@ -163,7 +158,7 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
         .update(updatedData);
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Entrée mise à jour.")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Updated successfully")));
       Navigator.pop(context);
     }
 
@@ -183,7 +178,7 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
     } catch (e) {
       log("Erreur lors de l'upload de l'image : $e");
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Erreur lors de l'upload de l'image : $e")));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Something went wrong : $e")));
       }
       rethrow;
     }
@@ -202,7 +197,7 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Modifier l'entrée")),
+      appBar: AppBar(title: const Text("Update entry")),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -230,15 +225,15 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
                   decoration: InputDecoration(labelText: field.label, alignLabelWithHint: true, border: const OutlineInputBorder()),
                 ),
               );
-            } else if (field.type == 'fournisseur') {
+            } else if (field.type == 'supplier') {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: AutocompleteTextField(
-                  initialValue: _selectedFournisseur,
-                  label: 'fournisseur',
+                  initialValue: _selectedSupplier,
+                  label: field.label,
                   onChanged: (val) {
-                    log("Selected fournisseur: $val");
-                    _selectedFournisseur = val;
+                    log("Selected supplier: $val");
+                    _selectedSupplier = val;
                   },
                 ),
               );
@@ -252,7 +247,7 @@ class _EditEntryScreenState extends State<EditEntryScreen> {
           ElevatedButton.icon(
             onPressed: _isSubmitting ? null : _submit,
             icon: _isSubmitting ? const CircularProgressIndicator(color: Colors.white) : const Icon(Icons.save),
-            label: const Text("Sauvegarder les modifications"),
+            label: const Text("Save changes"),
           ),
         ],
       ),

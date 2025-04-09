@@ -1,14 +1,15 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
-import 'package:mysourcing2/models/fournisseur_model.dart';
+import 'package:mysourcing2/models/supplier_model.dart';
 import 'package:mysourcing2/services/database_service.dart';
 
 class AutocompleteTextField extends StatefulWidget {
-  final FournisseurModel? initialValue;
+  final SupplierModel? initialValue;
   final String label;
-  final Function(FournisseurModel fournisseur)? onChanged;
+  final Function(SupplierModel supplier)? onChanged;
   const AutocompleteTextField({super.key, required this.initialValue, required this.label, required this.onChanged});
 
   @override
@@ -18,24 +19,24 @@ class AutocompleteTextField extends StatefulWidget {
 class _AutocompleteTextFieldState extends State<AutocompleteTextField> {
   late TextEditingController? controller;
 
-  List<FournisseurModel> fournisseurs = [];
+  List<SupplierModel> suppliers = [];
 
-  StreamSubscription? _fournisseurSubscription;
+  StreamSubscription? _supplierSubscription;
 
   @override
   void initState() {
     super.initState();
 
-    _fournisseurSubscription = GetIt.I<DatabaseService>().streamFournisseurs().listen((value) {
+    _supplierSubscription = GetIt.I<DatabaseService>().streamSuppliers().listen((value) {
       setState(() {
-        fournisseurs = value;
+        suppliers = value;
       });
     });
   }
 
   @override
   void dispose() {
-    _fournisseurSubscription?.cancel();
+    _supplierSubscription?.cancel();
     super.dispose();
   }
 
@@ -47,16 +48,16 @@ class _AutocompleteTextFieldState extends State<AutocompleteTextField> {
           initialValue: TextEditingValue(text: widget.initialValue?.name ?? ''),
           optionsBuilder: (TextEditingValue textEditingValue) {
             if (textEditingValue.text == '') {
-              return const ['Ajouter un fournisseur'];
+              return const ['Add a supplier'];
             }
-            final options = fournisseurs.where((FournisseurModel option) {
+            final options = suppliers.where((SupplierModel option) {
               return option.name?.toLowerCase().contains(textEditingValue.text.toLowerCase()) ?? false;
             });
 
             if (options.isEmpty) {
-              return const ['Ajouter un fournisseur'];
+              return const ['Add a supplier'];
             }
-            return options.map((FournisseurModel option) => option.name!).toList();
+            return options.map((SupplierModel option) => option.name!).toList();
           },
           optionsViewBuilder: (context, onSelected, options) {
             return Align(
@@ -88,7 +89,7 @@ class _AutocompleteTextFieldState extends State<AutocompleteTextField> {
             return AnimatedBuilder(
               animation: controller!,
               builder: (context, child) {
-                if (textEditingController.text == 'Ajouter un fournisseur') {
+                if (textEditingController.text == 'Add a supplier') {
                   textEditingController.clear();
                   focusNode.unfocus();
                 }
@@ -97,15 +98,14 @@ class _AutocompleteTextFieldState extends State<AutocompleteTextField> {
             );
           },
           onSelected: (String selection) {
-            if (selection == 'Ajouter un fournisseur') {
-              // Handle the case when the user selects "Ajouter un fournisseur"
-              _showPopUpToAddFournisseur();
+            if (selection == 'Add a supplier') {
+              _showPopUpToAddSupplier();
             } else {
               // Handle the case when the user selects an existing option
               debugPrint('User selected: $selection');
-              final selectedFournisseur = fournisseurs.firstWhere((fournisseur) => fournisseur.name == selection);
+              final selectedSupplier = suppliers.firstWhere((val) => val.name == selection);
               if (widget.onChanged != null) {
-                widget.onChanged!(selectedFournisseur);
+                widget.onChanged!(selectedSupplier);
               }
             }
           },
@@ -114,23 +114,23 @@ class _AutocompleteTextFieldState extends State<AutocompleteTextField> {
     );
   }
 
-  _showPopUpToAddFournisseur() async {
-    final fournisseurModel = FournisseurModel(name: '', description: '');
+  _showPopUpToAddSupplier() async {
+    final supplierModel = SupplierModel(name: '', description: '');
 
-    final fournisseur = await showDialog<FournisseurModel>(
+    final supplier = await showDialog<SupplierModel>(
       context: context,
       builder: (context) {
-        // Create a new instance of FournisseurModel
+        // Create a new instance of SupplierModel
         return AlertDialog(
-          title: const Text('Ajouter un fournisseur'),
+          title: const Text('Add a new supplier'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               TextField(
-                decoration: const InputDecoration(labelText: 'Nom du société'),
+                decoration: const InputDecoration(labelText: 'Company name'),
                 onChanged: (value) {
                   // Handle the input value
-                  fournisseurModel.name = value;
+                  supplierModel.name = value;
                 },
               ),
               SizedBox(height: 16),
@@ -139,24 +139,24 @@ class _AutocompleteTextFieldState extends State<AutocompleteTextField> {
                 decoration: const InputDecoration(labelText: 'Description', alignLabelWithHint: true),
                 onChanged: (value) {
                   // Handle the input value
-                  fournisseurModel.description = value;
+                  supplierModel.description = value;
                 },
               ),
             ],
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Annuler'),
+              child: const Text('Cancel'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
 
             TextButton(
-              child: const Text('Ajouter'),
+              child: const Text('Add'),
               onPressed: () {
                 // Handle adding the new supplier
-                Navigator.of(context).pop(fournisseurModel);
+                Navigator.of(context).pop(supplierModel);
               },
             ),
           ],
@@ -164,26 +164,23 @@ class _AutocompleteTextFieldState extends State<AutocompleteTextField> {
       },
     );
 
-    if (fournisseur != null) {
+    if (supplier != null) {
       // Handle the added supplier
-      debugPrint('Added supplier: ${fournisseurModel.toJson()}');
-      _saveFournisseur(fournisseur);
-    } else {
-      // Handle the case when the user cancels the dialog
-      debugPrint('User cancelled the dialog');
+      log('Added supplier: ${supplierModel.toJson()}');
+      _saveSupplier(supplier);
     }
   }
 
-  _saveFournisseur(FournisseurModel fournisseur) async {
-    await GetIt.I<DatabaseService>().addFournisseur(data: fournisseur);
+  _saveSupplier(SupplierModel supplier) async {
+    await GetIt.I<DatabaseService>().addSupplier(data: supplier);
 
     // Handle the case when the supplier is saved successfully
-    if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Fournisseur ajouté avec succès")));
+    if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("New supplier added!")));
 
-    controller?.text = fournisseur.name!;
+    controller?.text = supplier.name!;
 
     if (widget.onChanged != null) {
-      widget.onChanged!(fournisseur);
+      widget.onChanged!(supplier);
     }
   }
 }

@@ -20,17 +20,11 @@ class HomeScreen extends StatelessWidget {
     PermissionStatus status = await Permission.camera.request();
 
     if (status.isGranted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Permission de caméra accordée !')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Permission granted.')));
     } else if (status.isDenied) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Permission de caméra refusée.')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Permission denied.')));
     } else if (status.isPermanentlyDenied) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Accès à la caméra définitivement refusé.')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Permission permanently denied.')));
     }
   }
 
@@ -40,11 +34,7 @@ class HomeScreen extends StatelessWidget {
       CreateFormScreen(
         onFormCreated: (title, fields) async {
           final userId = FirebaseAuth.instance.currentUser!.uid;
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(userId)
-              .collection('forms')
-              .add({
+          await FirebaseFirestore.instance.collection('users').doc(userId).collection('forms').add({
             'title': title,
             'fields': fields.map((f) => f.toMap()).toList(),
             'createdAt': Timestamp.now(),
@@ -53,13 +43,11 @@ class HomeScreen extends StatelessWidget {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text("Formulaire créé avec succès !"),
+                content: Text("Form created successfully"),
                 backgroundColor: Colors.green,
                 behavior: SnackBarBehavior.floating,
                 margin: EdgeInsets.all(16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
               ),
             );
           }
@@ -73,10 +61,7 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: customAppBar(
         actions: [
-          IconButton(
-            onPressed: () => _signOut(context),
-            icon: const Icon(Icons.logout),
-          ),
+          IconButton(onPressed: () => _signOut(context), icon: const Icon(Icons.logout)),
           IconButton(
             icon: const Icon(Icons.camera_alt),
             onPressed: () => _requestCameraPermission(context), // Demander la permission caméra au clic
@@ -87,7 +72,7 @@ class HomeScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openCreateForm(context),
         icon: const Icon(Icons.add),
-        label: const Text("Créer un formulaire"),
+        label: const Text("Create Form"),
       ),
     );
   }

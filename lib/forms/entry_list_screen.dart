@@ -55,7 +55,7 @@ class _EntryListScreenState extends State<EntryListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Entrées : ${widget.formTitle}"),
+        title: Text("Entries : ${widget.formTitle}"),
         // Suppression des deux icônes à droite du header (actions)
         actions: [],
       ),
@@ -75,11 +75,11 @@ class _EntryListScreenState extends State<EntryListScreen> {
                 child: Row(
                   children: [
                     Checkbox(value: selectAll, onChanged: (_) => _toggleSelectAll(entries)),
-                    const Text("Tout sélectionner"),
+                    const Text("Select All"),
                     const Spacer(),
                     ElevatedButton.icon(
                       icon: const Icon(Icons.file_download),
-                      label: const Text("Exporter"),
+                      label: const Text("Export"),
                       onPressed: () => _exportSelected(entries),
                     ),
                   ],
@@ -109,8 +109,6 @@ class _EntryListScreenState extends State<EntryListScreen> {
                       orElse: () => FormFieldData(label: '', type: 'text'),
                     );
                     final List<String>? thumbnailImagePath = imageField.label.isNotEmpty ? List<String>.from(data[imageField.label]) : null;
-
-                    log('Thumbs: $thumbnailImagePath');
 
                     return Card(
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -153,11 +151,11 @@ class _EntryListScreenState extends State<EntryListScreen> {
                                   context: context,
                                   builder:
                                       (context) => AlertDialog(
-                                        title: const Text("Supprimer l'entrée"),
-                                        content: const Text("Êtes-vous sûr de vouloir supprimer cette entrée ?"),
+                                        title: const Text("Delete Entry"),
+                                        content: const Text("Are you sure you want to delete this entry?"),
                                         actions: [
-                                          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Annuler")),
-                                          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text("Supprimer")),
+                                          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancel")),
+                                          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text("Delete")),
                                         ],
                                       ),
                                 );
@@ -171,7 +169,7 @@ class _EntryListScreenState extends State<EntryListScreen> {
                                       .collection('entries')
                                       .doc(entryId)
                                       .delete();
-                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Entrée supprimée.")));
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Entry deleted.")));
                                 }
                               },
                             ),
@@ -191,7 +189,7 @@ class _EntryListScreenState extends State<EntryListScreen> {
 
   Widget _buildTitle(dynamic firstFilled) {
     if (firstFilled == null) {
-      return const Text("Aucune donnée", style: TextStyle(fontWeight: FontWeight.w600));
+      return const Text("No Data", style: TextStyle(fontWeight: FontWeight.w600));
     }
 
     if (firstFilled is String) {
@@ -205,6 +203,6 @@ class _EntryListScreenState extends State<EntryListScreen> {
     if (firstFilled is Map) {
       return Text(firstFilled.entries.first.value, style: const TextStyle(fontWeight: FontWeight.w600));
     }
-    return const Text("Données non valides", style: TextStyle(fontWeight: FontWeight.w600));
+    return const Text("Data wrongly formatted", style: TextStyle(fontWeight: FontWeight.w600));
   }
 }

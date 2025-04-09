@@ -14,7 +14,7 @@ class _CreateFormScreenState extends State<CreateFormScreen> {
   final _titleController = TextEditingController();
   final List<FormFieldData> _fields = [];
 
-  final List<String> _fieldTypes = ['text', 'number', 'multiline', 'image', 'fournisseur'];
+  final List<String> _fieldTypes = ['text', 'number', 'multiline', 'image', 'supplier'];
   String _selectedType = 'text';
   final _labelController = TextEditingController();
 
@@ -38,7 +38,7 @@ class _CreateFormScreenState extends State<CreateFormScreen> {
   void _submitForm() {
     final title = _titleController.text.trim();
     if (title.isEmpty || _fields.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Veuillez compléter le formulaire")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Complete the form before submitting"), backgroundColor: Colors.red));
       return;
     }
 
@@ -46,7 +46,7 @@ class _CreateFormScreenState extends State<CreateFormScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text("Formulaire créé avec succès !"),
+        content: const Text("Form created successfully"),
         backgroundColor: Colors.green,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -63,18 +63,18 @@ class _CreateFormScreenState extends State<CreateFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Créer un formulaire")),
+      appBar: AppBar(title: const Text("Create a form")),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: ListView(
           children: [
-            TextField(controller: _titleController, decoration: const InputDecoration(labelText: "Titre du formulaire")),
+            TextField(controller: _titleController, decoration: const InputDecoration(labelText: "Form Title")),
             const SizedBox(height: 24),
-            Text("Ajouter un champ", style: Theme.of(context).textTheme.titleLarge),
+            Text("Add a field", style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             Row(
               children: [
-                Expanded(child: TextField(controller: _labelController, decoration: const InputDecoration(labelText: "Nom du champ"))),
+                Expanded(child: TextField(controller: _labelController, decoration: const InputDecoration(labelText: "Field Label"))),
                 const SizedBox(width: 12),
                 DropdownButton<String>(
                   value: _selectedType,
@@ -94,7 +94,7 @@ class _CreateFormScreenState extends State<CreateFormScreen> {
             ),
             const SizedBox(height: 24),
             if (_fields.isNotEmpty) ...[
-              Text("Champs du formulaire", style: Theme.of(context).textTheme.titleLarge),
+              Text("Field Value", style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 8),
               ..._fields.asMap().entries.map((entry) {
                 final index = entry.key;
@@ -111,7 +111,7 @@ class _CreateFormScreenState extends State<CreateFormScreen> {
               }),
             ],
             const SizedBox(height: 32),
-            ElevatedButton.icon(onPressed: _submitForm, icon: const Icon(Icons.check), label: const Text("Créer le formulaire")),
+            ElevatedButton.icon(onPressed: _submitForm, icon: const Icon(Icons.check), label: const Text("Create Form")),
           ],
         ),
       ),

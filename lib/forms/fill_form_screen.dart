@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:mysourcing2/models/fournisseur_model.dart';
+import 'package:mysourcing2/models/supplier_model.dart';
 import 'package:mysourcing2/services/storage_service.dart';
 import 'package:mysourcing2/widgets/auto_suggest.dart';
 import 'package:mysourcing2/widgets/image_uploader.dart';
@@ -30,7 +30,7 @@ class _FillFormScreenState extends State<FillFormScreen> {
 
   final List<File> _tempFiles = [];
 
-  FournisseurModel? _selectedFournisseur;
+  SupplierModel? _selectedSupplier;
 
   bool _isSubmitting = false;
 
@@ -46,8 +46,6 @@ class _FillFormScreenState extends State<FillFormScreen> {
 
   Future<void> _addImage() async {
     final status = await Permission.camera.request();
-
-    log("Status de la permission : $status");
 
     if (status != PermissionStatus.granted) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Permission refusée pour accéder à la caméra')));
@@ -68,12 +66,12 @@ class _FillFormScreenState extends State<FillFormScreen> {
                 children: [
                   ListTile(
                     leading: const Icon(Icons.camera_alt),
-                    title: const Text('Prendre une photo'),
+                    title: const Text('Take a picture'),
                     onTap: () => Navigator.pop(context, ImageSource.camera),
                   ),
                   ListTile(
                     leading: const Icon(Icons.photo),
-                    title: const Text('Choisir dans la galerie'),
+                    title: const Text('Pick from gallery'),
                     onTap: () => Navigator.pop(context, ImageSource.gallery),
                   ),
                 ],
@@ -120,8 +118,8 @@ class _FillFormScreenState extends State<FillFormScreen> {
           entry[field.label] = _controllers[field.label]?.text ?? '';
         }
 
-        if (field.type == 'fournisseur') {
-          entry[field.label] = _selectedFournisseur?.toJson();
+        if (field.type == 'supplier') {
+          entry[field.label] = _selectedSupplier?.toJson();
         }
       }
 
@@ -129,15 +127,15 @@ class _FillFormScreenState extends State<FillFormScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Entrée ajoutée avec succès')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Entry saved successfully')));
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => EntryListScreen(formId: widget.formId, formTitle: widget.formTitle, fields: widget.fields)),
       );
     } catch (e) {
-      log("❌ Erreur globale : $e");
+      log("❌ Error : $e");
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Erreur lors de la soumission : $e")));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error : $e")));
     } finally {
       if (mounted) {
         setState(() {
@@ -160,9 +158,8 @@ class _FillFormScreenState extends State<FillFormScreen> {
       );
       return newPaths;
     } catch (e) {
-      log("Erreur lors de l'upload de l'image : $e");
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Erreur lors de l'upload de l'image : $e")));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error : $e")));
       }
       rethrow;
     }
@@ -171,7 +168,7 @@ class _FillFormScreenState extends State<FillFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Ajouter un produit")),
+      appBar: AppBar(title: const Text("Add Product")),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: ListView(
@@ -195,13 +192,12 @@ class _FillFormScreenState extends State<FillFormScreen> {
                     const SizedBox(height: 8),
                   ],
                 );
-              } else if (field.type == 'fournisseur') {
+              } else if (field.type == 'supplier') {
                 return AutocompleteTextField(
-                  initialValue: _selectedFournisseur,
+                  initialValue: _selectedSupplier,
                   label: field.label,
-                  onChanged: (fournisseur) {
-                    log('Selected fournisseur: $fournisseur');
-                    _selectedFournisseur = fournisseur;
+                  onChanged: (val) {
+                    _selectedSupplier = val;
                   },
                 );
               } else {
@@ -219,7 +215,7 @@ class _FillFormScreenState extends State<FillFormScreen> {
             ElevatedButton.icon(
               onPressed: _isSubmitting ? null : _submit,
               icon: _isSubmitting ? const CircularProgressIndicator(color: Colors.white) : const Icon(Icons.save),
-              label: const Text("Sauvegarder"),
+              label: const Text("Save"),
             ),
           ],
         ),
