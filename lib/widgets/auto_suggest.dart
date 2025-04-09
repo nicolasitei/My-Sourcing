@@ -135,7 +135,7 @@ class _AutocompleteTextFieldState extends State<AutocompleteTextField> {
               ),
               SizedBox(height: 16),
               TextField(
-                maxLines: 5,
+                maxLines: 3,
                 decoration: const InputDecoration(labelText: 'Description', alignLabelWithHint: true),
                 onChanged: (value) {
                   // Handle the input value
@@ -156,6 +156,14 @@ class _AutocompleteTextFieldState extends State<AutocompleteTextField> {
               child: const Text('Add'),
               onPressed: () {
                 // Handle adding the new supplier
+                if (supplierModel.name == null || supplierModel.name!.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please enter a company name")));
+                  return;
+                }
+                if (supplierModel.description == null || supplierModel.description!.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please enter a description")));
+                  return;
+                }
                 Navigator.of(context).pop(supplierModel);
               },
             ),

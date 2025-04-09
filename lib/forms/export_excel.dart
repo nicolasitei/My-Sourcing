@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:mysourcing2/models/supplier_model.dart';
 import 'package:mysourcing2/services/storage_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart'; // Assurez-vous que le bon package est importé
@@ -45,6 +46,10 @@ Future<void> exportSelectedEntriesToExcel({
           final urls = await Future.wait(imageUrls);
 
           row.add(TextCellValue(urls.toString()));
+        } else if (field.type == 'supplier') {
+          final value = SupplierModel.fromJson(entry[field.label]);
+          row.add(TextCellValue('${value.name}, ${value.description}'));
+          log('Updated entry: $entry');
         } else {
           final value = entry[field.label];
           row.add(TextCellValue(value?.toString() ?? ''));
