@@ -59,15 +59,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: customAppBar(
-        actions: [
-          IconButton(onPressed: () => _signOut(context), icon: const Icon(Icons.logout)),
-          IconButton(
-            icon: const Icon(Icons.camera_alt),
-            onPressed: () => _requestCameraPermission(context), // Demander la permission caméra au clic
-          ),
-        ],
-      ),
+      appBar: customAppBar(actions: [IconButton(onPressed: () => _signOut(context), icon: const Icon(Icons.logout))]),
       body: const FormListScreen(),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openCreateForm(context),
