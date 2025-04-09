@@ -59,11 +59,11 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBfHQvPWF2Q6g4OByUNhdcG-G--v5yqPpY',
-    appId: '1:795871260446:ios:7ddff60caff128aaff630f',
+    appId: '1:795871260446:ios:3714d3dd668aa0efff630f',
     messagingSenderId: '795871260446',
     projectId: 'my-sourcing',
     storageBucket: 'my-sourcing.firebasestorage.app',
-    iosBundleId: 'com.example.mysourcing2',
+    iosBundleId: 'com.wiboo.mysourcing2',
   );
 
 }
